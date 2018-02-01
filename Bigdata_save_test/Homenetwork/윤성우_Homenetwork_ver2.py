@@ -10,14 +10,14 @@ import threading
 # 시뮬레이션 데이터는 필요한 데이터만 저장하던지 아니면 실제 response 데이터를 조작하던지 할것
 # 실시간 기상 정보 Update하면 장비제어와 관련된 기상정보는 따로 출력한다.
 
-# 실제 홈네트워크 시스템처럼 한번 가동되면 꺼지지 않게.( 따라서 재시작에 대한 고려는 일단 X)
-g_Radiator = False # 전역변수 지역변수 변수명에 표시( 회사에서 꼭 쓴다고 함. )
-g_Gas_Valve = False
-g_Balcony_Windows = False # 건축법 시행령에 따라 베란다가 아닌 폐쇄형 발코니가 정확한 표현
-g_Door = False # 출입문
-g_humidifier = False # 가습기
-g_dehumidifier = False # 제습기
-g_AI_Mode = False
+# 실제 홈네트워크 시스템처럼 한번 가동되면 꺼지지 않게 해야함
+g_Radiator = False         # 전역변수 지역변수 변수명에 표시
+g_Gas_Valve = False        # 가스벨브
+g_Balcony_Windows = False  # 폐쇄형 발코니가 옳은 표현
+g_Door = False             # 출입문
+g_humidifier = False       # 가습기
+g_dehumidifier = False     # 제습기
+g_AI_Mode = False          # 인공지능 모드
 
 def print_main_menu():
     print("\n<< SMART HOME NETWORK SERVICE ver1.0 >>")
@@ -29,23 +29,24 @@ def print_main_menu():
     print("5. 프로그램 종료")
     print("-" * 40)
 
-def device_status(device, device_status, on_messege='', off_messege=''):
+def device_status(device, device_status, on_messege = '작동', off_messege = '중지'):
     print("%s : " % device, end = '')
-    if device_status == True : print("작동(열림)")
-    elif device_status == False : print("정지(닫힘)")
+    if device_status == True : print(on_messege)
+    elif device_status == False : print(off_messege)
 
 def check_device_status():
-    print("\n" + "-" * 25)
+    print("\n" + "-" * 40)
     device_status('난방기', g_Radiator)
     device_status('가스밸브', g_Gas_Valve)
     device_status('발코니(베란다) 창문', g_Balcony_Windows)
     device_status('출입문', g_Door)
     device_status('가습기', g_humidifier)
     device_status('제습기', g_dehumidifier)
-    print("-" * 25)
+    print("-" * 40)
 
 def print_device_menu():
-    print("\n<< 작동 가능한 기기 >>")
+    print("\n\t<< 작동 가능한 기기 >>")
+    print("-" * 40)
     print("1. 난방기")
     print("2. 가스벨브")
     print("3. 발코니 창문")
@@ -54,6 +55,7 @@ def print_device_menu():
     print("6. 제습기")
     print("7. 스마트 스피커( 영화 검색 )")
     print("0. 뒤로가기")
+    print("-" * 40)
 
 def control_device_menu():
     global g_Radiator, g_Gas_Valve, g_Balcony_window, g_Door , g_humidifier ,g_dehumidifier
@@ -113,10 +115,12 @@ def weather_save(jsonResult):
 
 def smart_mode():
     global g_AI_Mode
-    print("\n<< 스마트 모드 >>")
+    print("\n\t\t<< 스마트 모드 >>")
+    print("-" * 40)
     print("1. 인공지능 모드 상태 조회")
     print("2. 인공지능 모드 상태 변경")
     print("3. 실시간 기상정보 Update")
+    print("-" * 40)
     menu_num = int(input("메뉴를 선택하세요 : "))
 
     if menu_num == 1 :
@@ -136,39 +140,62 @@ def smart_mode():
         if __name__ == "__main__":
             weather_save(show_weather_main())
 
-    elif menu_num == 4 :
-        global g_Balcony_window
-        weather_list = []
-        weather_info = {}
-        weather_info["category"] = "RN1"
-        weather_info["fcstValue"] = "10"
-        weather_info["fsctTime"] =  1600
-        weather_list.append(weather_info)
-
-        with open("창문을닫자.json", "w", encoding="utf-8") as outfile:
-            weather_record = json.dumps(weather_list, indent=4, sort_keys=True, ensure_ascii=False)
-            outfile.write(weather_record)
-
-        with open("창문을닫자.json", encoding="utf8") as json_file:
-            json_object = json.load(json_file)
-            json_string = json.dumps(json_object)
-            jsonResult = json.loads(json_string)
-
-        print("발코니 창문 상태 : ", end='')
-        if g_Balcony_window == True:
-            print("열림")
-            if jsonResult[0]["fcstValue"] != "0":
-                g_Balcony_window = not g_Balcony_window
-                print("닫힘")
-        elif g_Balcony_window == False:
-            print("닫힘")
+    # elif menu_num == 4 :
+    #     global g_Balcony_window
+    #     weather_list = []
+    #     weather_info = {}
+    #     weather_info["category"] = "RN1"
+    #     weather_info["fcstValue"] = "10"
+    #     weather_info["fsctTime"] =  1600
+    #     weather_list.append(weather_info)
+    #
+    #     with open("창문을닫자.json", "w", encoding="utf-8") as outfile:
+    #         weather_record = json.dumps(weather_list, indent=4, sort_keys=True, ensure_ascii=False)
+    #         outfile.write(weather_record)
+    #
+    #     with open("창문을닫자.json", encoding="utf8") as json_file:
+    #         json_object = json.load(json_file)
+    #         json_string = json.dumps(json_object)
+    #         jsonResult = json.loads(json_string)
+    #
+    #     print("발코니 창문 상태 : ", end='')
+    #     if g_Balcony_window == True:
+    #         print("열림")
+    #         if jsonResult[0]["fcstValue"] != "0":
+    #             g_Balcony_window = not g_Balcony_window
+    #             print("닫힘")
+    #     elif g_Balcony_window == False:
+    #         print("닫힘")
 
 def simulation_mode():
-    print("<< 시뮬레이션 모드 >>")
+    print("\t\t<< 시뮬레이션 모드 >>")
+    print("-" * 45)
     print("1. 비 오는 날 시뮬레이션 (발코니창문 제어)")
     print("2. 습한 날 시뮬레이션 (제습기 제어)")
     print("3. 건조한 날 시뮬레이션 (가습기 제어)")
     print("4. 상쾌한 날 시뮬레이션 (제습기/가습기 제어)")
+    print("-" * 45)
+
+def situatoin_simulator():
+
+def simulation_controll():
+    number = int(input("\n메뉴를 선택하세요 : "))
+    if number == 1 :
+        print("\n비오는 중 ===> 상황만들기")
+        print("발코니 창문 제어")
+
+    elif number == 2 :
+        print("\n비오는 중 ===> 상황만들기")
+        print("발코니 창문 제어")
+
+    elif number == 3 :
+        print("\n비오는 중 ===> 상황만들기")
+        print("발코니 창문 제어")
+
+    elif number == 4 :
+        print("\n비오는 중 ===> 상황만들기")
+        print("발코니 창문 제어")
+
 
 def get_request_url(url):
     req = urllib.request.Request(url)
@@ -192,9 +219,9 @@ def update_scheduler():
             time.sleep(5)
             g_Balcony_Windows = not g_Balcony_Windows
 
-t = threading.Thread(target=update_scheduler)
-t.daemon = True
-t.start()
+# t = threading.Thread(target=update_scheduler)
+# t.daemon = True
+# t.start()
 
 while True:
     print_main_menu()
