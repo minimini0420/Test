@@ -4,12 +4,6 @@ import datetime
 import time
 import threading
 import random
-# HK Comment] 공통 사항
-# 1. 변수명은 최대한 가독성 높게 (나쁜 예: dt ..)
-# 2. 실시간 Update 할 떄나 인공지능 모드에 의해서 Scheduling 작업시 기상정보 가져온후
-#    발코니창이 문닫는 조건이 된다면 문 닫는 로직 추가
-# 시뮬레이션 데이터는 필요한 데이터만 저장하던지 아니면 실제 response 데이터를 조작하던지 할것
-# 실시간 기상 정보 Update하면 장비제어와 관련된 기상정보는 따로 출력한다.
 
 # 실제 홈네트워크 시스템처럼 한번 가동되면 꺼지지 않게 해야함
 
