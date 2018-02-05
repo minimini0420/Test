@@ -12,15 +12,18 @@ import random
 # 실시간 기상 정보 Update하면 장비제어와 관련된 기상정보는 따로 출력한다.
 
 # 실제 홈네트워크 시스템처럼 한번 가동되면 꺼지지 않게 해야함
+
 g_Radiator = False         # 난방기
 g_Gas_Valve = False        # 가스벨브
 g_Balcony_Windows = False  # 폐쇄형 발코니가 옳은 표현
 g_Door = False             # 출입문
 g_humidifier = False       # 가습기
 g_dehumidifier = False     # 제습기
+g_airconditioner = False   # 에어컨
 g_AI_Mode = False          # 인공지능 모드
 nx = '89'
 ny = '91'
+
 g_Max_Acceptable_humidity_level = 60
 g_Min_Acceptable_humidity_level = 50
 
@@ -38,12 +41,14 @@ def Auto_scheduler():
                 auto_window(weather_info_data)
                 auto_humidifier(weather_info_data)
                 auto_dehumidifier(weather_info_data)
+                auto_temperature(weather_info_data)
                 time_check_45min = True
 
             elif current_time.minute != 45 :
                 time_check_45min = False
 
 def auto_start_show():
+    pass
 
 def auto_window(data):
     global g_Balcony_Windows
@@ -84,6 +89,27 @@ def auto_dehumidifier(data):
                     print("- 제습기가 가동 중 입니다.")
                 else : pass
 
+def auto_temperature(data):
+    global g_airconditioner, g_Radiator
+    device_status('에어컨', g_airconditioner)
+    for i in range(len(data['response']['body']['items']['item'])):
+        if data['response']['body']['items']['item'][i]['category'] == 'T1H':
+            if data['response']['body']['items']['item'][i]['fcstValue'] > 24:
+                if g_airconditioner == False:
+                    print("- 실외 기온이 높은 날씨입니다. 에어컨을 가동합니다.")
+                    g_airconditioner = not g_airconditioner
+                    device_status('에어컨', g_airconditioner)
+                    print("- 에어컨이 가동 중 입니다.")
+                else : pass
+
+            elif data['response']['body']['items']['item'][i]['fcstValue'] < 5 :
+                if g_Radiator == False:
+                    print("- 실외 기온이 낮은 날씨입니다. 난방기를 가동합니다.")
+                    g_Radiator = not g_Radiator
+                    device_status('난방기',g_Radiator)
+                    print("난방기가 가동 중 입니다.")
+                else : pass
+
 def print_main_menu():
     print("\n   << SMART HOME NETWORK SERVICE ver1.0 >>")
     print("-" * 45)
@@ -103,16 +129,17 @@ def check_device_status():
     device_status('출입문', g_Door)
     device_status('가습기', g_humidifier)
     device_status('제습기', g_dehumidifier)
+    device_status('에어컨', g_airconditioner)
     print("-" * 45)
 
 def print_device_menu():
     print("\n\t\t<< 작동 가능한 기기 >>")
     print("-" * 45)
-    print("1. 난방기\n2. 가스벨브\n3. 발코니 창문\n4. 출입문\n5. 가습기\n6. 제습기\n0. 뒤로가기")
+    print("1. 난방기\n2. 가스벨브\n3. 발코니 창문\n4. 출입문\n5. 가습기\n6. 제습기\n7.에어컨\n0. 뒤로가기")
     print("-" * 45)
 
 def control_device_menu():
-    global g_Radiator, g_Gas_Valve, g_Balcony_Windows, g_Door , g_humidifier ,g_dehumidifier
+    global g_Radiator, g_Gas_Valve, g_Balcony_Windows, g_Door , g_humidifier ,g_dehumidifier, g_airconditioner
     number = int(input("\n메뉴를 선택하세요 : "))
     if number > 0:
         check_device_status()
@@ -122,6 +149,7 @@ def control_device_menu():
         elif number == 4: g_Door = not g_Door
         elif number == 5: g_humidifier = not g_humidifier
         elif number == 6: g_dehumidifier = not g_dehumidifier
+        elif number == 7: g_airconditioner = not g_airconditioner
         check_device_status()
     else:
         return number
@@ -159,7 +187,7 @@ def show_weather_main():
             jsonResult.append(element)
     return jsonResult
 
-def weather_save(jsonResult, json_name):
+def weather_save(jsonResult):
     with open('%s_동구_신암동_기상예보.json' % time.strftime("%Y%m%d",time.localtime(time.time())),'w',encoding='utf8') as outfile:
         retJson = json.dumps(jsonResult,indent=4,sort_keys=True,ensure_ascii=False)
         outfile.write(retJson)
@@ -181,6 +209,7 @@ def smart_mode():
         print("-" * 45)
 
     elif menu_num == 2 :
+        check_device_status()
         print("\n\t\t<< 인공지능 모드 상태 변경 >>")
         print("-" * 45)
         device_status("인공지능 모드", g_AI_Mode)
@@ -196,11 +225,11 @@ def smart_mode():
 def simulation_mode():
     print("\t\t\t<< 시뮬레이션 모드 >>")
     print("-" * 45)
-    print("1. 비 오는 날 시뮬레이션 (발코니창문 제어)\n2. 습한 날 시뮬레이션 (제습기 제어)\n3. 건조한 날 시뮬레이션 (가습기 제어)\n4. 상쾌한 날 시뮬레이션 (제습기/가습기 제어)")
+    print("1. 비 오는 날 시뮬레이션 (발코니창문 제어)\n2. 습한 날 시뮬레이션 (제습기 제어)\n3. 건조한 날 시뮬레이션 (가습기 제어)\n4. 상쾌한 날 시뮬레이션 (제습기/가습기 제어)\n5. 온도 조절 시뮬레이션 (에어컨 제어/난방기 제어)")
     print("-" * 45)
 
 def situation_simulator(result):
-    global g_dehumidifier, g_humidifier, g_Radiator, g_Door, g_Gas_Valve, g_Balcony_Windows
+    global g_dehumidifier, g_humidifier, g_Radiator, g_Door, g_Gas_Valve, g_Balcony_Windows, g_airconditioner
 
     print("\n" + "-" * 45)
     if result[0]['category'] == "RN1":
@@ -234,9 +263,31 @@ def situation_simulator(result):
         elif 70 > result[0]['fcstValue'] > 30 :
             print("- 상쾌한 날씨입니다. 현재 습도 :  %s %% 입니다" % result[0]['fcstValue'])
             if g_dehumidifier == True and g_dehumidifier == True:
-                print("- 제습기가 작동 중 입니다")
+                print("- '제습기/가습기'가 작동 중 입니다")
                 g_dehumidifier = not g_dehumidifier
-                print("- 제습기 가동을 멈춥니다")
+                print("- '제습기/가습기'의 가동을 멈춥니다")
+            else: print("현재 가습기/제습기 멈춰 있는 상태입니다")
+
+    elif result[0]['category'] == "T1H":
+
+        if result[0]['fcstValue'] > 24 :
+            print("- 현재 기온이 높습니다. 현재 기온 :  %s 도 입니다" % result[0]['fcstValue'])
+            if g_humidifier == False:
+                print("- 에어컨이 꺼져 있습니다 !!!")
+                g_humidifier = not g_humidifier
+                print("- 에어컨을 가동합니다")
+            else: print("이미 에어컨이 가동 중 입니다")
+
+        elif result[0]['fcstValue'] < 5 :
+            print("- 현재 기온이 낮습니다. 현재 기온 :  %s 도 입니다" % result[0]['fcstValue'])
+            if g_Radiator == False:
+                print("- 난방기가 꺼져 있습니다 !!!")
+                g_Radiator = not g_Radiator
+                print("- 난방기를 가동합니다")
+            else: print("이미 난방기가 가동 중 입니다")
+
+        else: print("- 현재 적절한 기온이 유지되고 있습니다. 현재 기온 : %s 도 입니다" % result[0]['fcstValue'])
+    print("-" * 45)
 
 def simulation_controll():
     global g_dehumidifier, g_humidifier, g_Radiator, g_Door, g_Gas_Valve, g_Balcony_Windows
@@ -254,11 +305,16 @@ def simulation_controll():
         simulation_weather["category"] = "RN1"
         simulation_weather["fcstValue"] = random.randint(1,100)
 
-    elif 5 > number > 1 :
+    elif 3 > number > 1 :
         simulation_weather["category"] = "REH"
         simulation_weather["fcstValue"] = random.randint(1,100)
 
+    elif number == 5:
+        simulation_weather["category"] = "T1H"
+        simulation_weather["fcstValue"] = random.randint(-40,40)
+
     simulation_weather_list.append(simulation_weather)
+
     return simulation_weather_list
 
 def get_request_url(url):
@@ -266,22 +322,15 @@ def get_request_url(url):
 
     try:
         response = urllib.request.urlopen(req)
+
         if response.getcode() == 200:
             print("[%s] Url Request Success" %datetime.datetime.now())
             return response.read().decode('utf-8')
+
     except Exception as e:
         print(e)
         print("[%s] Error for URL:%s" %(datetime.datetime.now(), url))
         return None
-
-def update_scheduler():
-    global g_Balcony_Windows
-    while True:
-        if g_AI_Mode == False:
-            continue
-        else:
-            time.sleep(5)
-            g_Balcony_Windows = not g_Balcony_Windows
 
 AI_t = threading.Thread(target=Auto_scheduler)
 AI_t.daemon = True
